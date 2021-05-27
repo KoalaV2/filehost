@@ -2,6 +2,7 @@
 
 from flask import Flask, flash, request, redirect, url_for
 import json
+import random
 
 host_ip = '0.0.0.0'
 host_port = '7331'
@@ -25,13 +26,15 @@ def upload_file():
     if request.method == 'POST':
         uploaded_file = request.files['file']
         if allowed_file(uploaded_file.filename):
+            random_adj = random.choice(adjectives)
+            random_ani = random.choice(animals)
             print("Allowed file")
             filename = uploaded_file.filename
             file_type = filename.rsplit('.', 1)[1]
             file_extension = f".{file_type}"
             print(f"File extension: {file_extension}")
-            uploaded_file.save(f"{upload_folder}lmao{file_extension}")
-            return(f"File saved as: https://f.theolikes.tech/{upload_folder}lmao{file_extension}")
+            uploaded_file.save(f"{upload_folder}{random_adj}{random_ani}{file_extension}")
+            return(f"File saved as: {upload_folder}{random_adj}{random_ani}{file_extension}")
         return "No file has been uploaded."
     return "Something went wrong."
 
