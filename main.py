@@ -70,22 +70,23 @@ class User:
 @app.route('/', methods=["GET","POST"])
 def upload_file():
     user = User()
-    username = request.authorization.username
-    password = request.authorization.password
-    if request.method == 'POST' and user.login(username,password):
-        uploaded_file = request.files['file']
-        if allowed_file(uploaded_file.filename):
-            randomAdjective = random.choice(adjectives)
-            randomAnimal = random.choice(animals)
-            print("Allowed file")
-            filename = uploaded_file.filename
-            fileType = filename.rsplit('.', 1)[1]
-            fileExtension = f".{fileType}"
-            print(f"File extension: {fileExtension}")
-            uploaded_file.save(f"{UPLOAD_FOLDER}{randomAdjective}{randomAnimal}{fileExtension}")
-            print(f"File saved as: https://theolikes.tech/files/{randomAdjective}{randomAnimal}{fileExtension}")
-            return(f"https://theolikes.tech/files/{randomAdjective}{randomAnimal}{fileExtension}")
-        return "No file has been uploaded. File extension now allowed."
+    if request.method == 'POST':
+        username = request.authorization.username
+        password = request.authorization.password
+        if user.login(username,password):
+            uploaded_file = request.files['file']
+            if allowed_file(uploaded_file.filename):
+                randomAdjective = random.choice(adjectives)
+                randomAnimal = random.choice(animals)
+                print("Allowed file")
+                filename = uploaded_file.filename
+                fileType = filename.rsplit('.', 1)[1]
+                fileExtension = f".{fileType}"
+                print(f"File extension: {fileExtension}")
+                uploaded_file.save(f"{UPLOAD_FOLDER}{randomAdjective}{randomAnimal}{fileExtension}")
+                print(f"File saved as: https://theolikes.tech/files/{randomAdjective}{randomAnimal}{fileExtension}")
+                return(f"https://theolikes.tech/files/{randomAdjective}{randomAnimal}{fileExtension}")
+            return "No file has been uploaded. File extension now allowed."
     if request.method == 'GET':
         return render_template("index.html")
 
