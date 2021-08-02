@@ -1,26 +1,40 @@
 #!/usr/bin/env python3
 
-from flask import Flask, flash, request, redirect, url_for
+from flask import Flask, flash, request, redirect, url_for, render_template
 import json
 import random
-from flask_httpauth import HTTPBasicAuth
-from werkzeug.security import generate_password_hash, check_password_hash
-import os
+import mariadb
+from os import getenv
+from dotenv import load_dotenv
+import bcrypt
 
 host_ip = '0.0.0.0'
 host_port = '7331'
+
 app = Flask(__name__)
-auth = HTTPBasicAuth()
 app.debug = True
 allowed_extensions = {'jpg','mp4','mov','jpeg','png','mkv'}
 
+load_dotenv()
+DB_USER = getenv("DB_USEr")
+DB_PASSWD = getenv("DB_PASSWD")
+DB_IP = getenv("DB_IP")
+DB_DATABASE = getenv("DB_DATABASE")
+UPLOAD_FOLDER = getenv("UPLOAD_FOLDER")
 
-password = os.environ['password']
-upload_folder = os.environ['upload_folder']
 
-users = {
-    "theo": generate_password_hash(password)
-}
+try:
+    conn = mariadb.connect(
+        user=DB_USER,
+        password=DB_PASSWD,
+        host=DB_IP,
+        port=3306,
+        database=DB_DATABASE
+
+    )
+except mariadb.Error as e:
+    print(f"Error connecting to MariaDB Platform: {e}")
+    exit()
 
 with open('words.json') as f:
     loaded_json = json.load(f)
@@ -32,30 +46,48 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
-@auth.verify_password
-def verify_password(username, password):
-    if username in users and \
-            check_password_hash(users.get(username), password):
-        return username
+
+class User:
+    def __init__(self):
+        self.salt = bcrypt.gensalt()
+        self.c = conn.cursor()
+    def login(self,username,password):
+        print("Querying..")
+        self.c.execute(f"SELECT username,password from web WHERE username='{username}'")
+        for row in self.c:
+            hashedpasswd = row[1].encode("utf-8")
+            print(f"Hashed password from database: {hashedpasswd}")
+            password = password.encode("utf-8")
+            if bcrypt.checkpw(password,hashedpasswd):
+                print(f"Welcome {username} you have been logged in.")
+                return(f"Welcome {username} you have been logged in.")
+            else:
+                print("Wrong username or password")
+                return("Wrong username or password.")
+        print("No user with that username found.")
+        return("No user with that username found.")
 
 @app.route('/', methods=["GET","POST"])
-@auth.login_required
 def upload_file():
-    if request.method == 'POST':
+    user = User()
+    username = request.authorization.username
+    password = request.authorization.password
+    if request.method == 'POST' and user.login(username,password):
         uploaded_file = request.files['file']
         if allowed_file(uploaded_file.filename):
-            random_adj = random.choice(adjectives)
-            random_ani = random.choice(animals)
+            randomAdjective = random.choice(adjectives)
+            randomAnimal = random.choice(animals)
             print("Allowed file")
             filename = uploaded_file.filename
-            file_type = filename.rsplit('.', 1)[1]
-            file_extension = f".{file_type}"
-            print(f"File extension: {file_extension}")
-            uploaded_file.save(f"{upload_folder}{random_adj}{random_ani}{file_extension}")
-            print(f"File saved as: https://theolikes.tech/files/{random_adj}{random_ani}{file_extension}")
-            return(f"https://theolikes.tech/files/{random_adj}{random_ani}{file_extension}")
-        return "No file has been uploaded."
-    return "Something went wrong."
+            fileType = filename.rsplit('.', 1)[1]
+            fileExtension = f".{fileType}"
+            print(f"File extension: {fileExtension}")
+            uploaded_file.save(f"{UPLOAD_FOLDER}{randomAdjective}{randomAnimal}{fileExtension}")
+            print(f"File saved as: https://theolikes.tech/files/{randomAdjective}{randomAnimal}{fileExtension}")
+            return(f"https://theolikes.tech/files/{randomAdjective}{randomAnimal}{fileExtension}")
+        return "No file has been uploaded. File extension now allowed."
+    if request.method == 'GET':
+        return render_template("index.html")
 
 
 def main():
