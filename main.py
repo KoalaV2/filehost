@@ -52,11 +52,12 @@ class User:
         self.salt = bcrypt.gensalt()
         self.c = conn.cursor()
     def login(self,username,password):
-        print("Querying..")
+        print(f"Querying for username {username}...")
         self.c.execute(f"SELECT username,password from web WHERE username='{username}'")
         for row in self.c:
             hashedpasswd = row[1].encode("utf-8")
             print(f"Hashed password from database: {hashedpasswd}")
+            print(f"Password from request: {password}")
             password = password.encode("utf-8")
             if bcrypt.checkpw(password,hashedpasswd):
                 print(f"Welcome {username} you have been logged in.")
@@ -67,6 +68,15 @@ class User:
         print("No user with that username found.")
         self.c.close()
         return("No user with that username found.")
+
+@app.route('/login',methods=["POST"])
+def loginpage():
+    user = User()
+    form = request.form
+    username = form["username"]
+    password = form["password"]
+    result = user.login(username,password)
+    return result
 
 @app.route('/', methods=["GET","POST"])
 def upload_file():
