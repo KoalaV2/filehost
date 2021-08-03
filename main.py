@@ -65,6 +65,7 @@ class User:
                 print("Wrong username or password")
                 return("Wrong username or password.")
         print("No user with that username found.")
+        self.c.close()
         return("No user with that username found.")
 
 @app.route('/', methods=["GET","POST"])
