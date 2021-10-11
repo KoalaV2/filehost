@@ -30,6 +30,8 @@ salt = bcrypt.gensalt()
 c = conn.cursor()
 
 
+c.execute('''CREATE TABLE IF NOT EXISTS web (username VARCHAR(255),password VARCHAR(255));''')
+
 username = input("What is the username? \n :")
 password = input("What is the password? \n :")
 
