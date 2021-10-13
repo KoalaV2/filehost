@@ -16,7 +16,7 @@ app.debug = True
 allowed_extensions = {'jpg','mp4','mov','jpeg','png','mkv'}
 
 load_dotenv()
-DB_USER = getenv("DB_USEr")
+DB_USER = getenv("DB_USER")
 DB_PASSWD = getenv("DB_PASSWD")
 DB_IP = getenv("DB_IP")
 DB_DATABASE = getenv("DB_DATABASE")
