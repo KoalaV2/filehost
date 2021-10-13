@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import bcrypt
 
 host_ip = '0.0.0.0'
-host_port = '7331'
+host_port = '7333'
 
 app = Flask(__name__)
 app.debug = True
